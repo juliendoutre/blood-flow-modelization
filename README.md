@@ -6,6 +6,6 @@ Blood is composed of 45% of cells floating in a liquid called plasma. In order t
 
 ## Documentation
 
-All the details about this project's model are detailed in the following documents:
+The project's model and results are detailed in the following documents:
 * [Documentation](doc/french_doc.pdf) (French)
 * Coming soon
