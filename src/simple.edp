@@ -1,0 +1,87 @@
+/* calcul du champ de vitesse dans un vaisseau sanguin */
+
+// définition des constantes et paramètres 
+real L = 10; // longueur du vaisseau
+real e = 1; // demi-épaisseur du vaisseau
+real U = 1; // vitesse en amont de l'écoulement sanguin 
+real r = 0.35; // rayon d'une cellule (conservation de l'échelle)
+int N = 12; // nombre de cellules dans le vaisseau 
+real a = 0;  
+real b = 0;
+
+// définition des bords du vaisseau sanguin
+border inf(t=0,L){x=t;y=-e;}  // paroi inférieure du vaisseau
+border aval(t=-e,e){x=L;y=t;}  // aval du vaisseau
+border sup(t=L,0){x=t;y=e;} // paroi supérieure du vaisseau
+border amont(t=e,-e){x=0;y=t;}  // amont du vaisseau
+
+// définition des cellules (obstacles)
+int c(0); // variable de comptage
+real[int, int] C(N,2); // matrice contenant les coordonnées des centres des obstacles
+for (int i=0;i<N;i++)
+{
+	C(i,1) = 0;
+	C(i,0) = 0;
+}
+while(c<N)  // on créé N cellules positionnées aléatoirement
+{
+	a = L*randreal1(); // abscisse aléatoire 
+	b = 2*e*randreal1() - e; // ordonnée aléatoire
+	if (a + r < L && a - r > 0 && b + r < e && b - r > -e) // condition de non débordement du vaisseau
+	{
+		bool ok(1);
+		for(int j=0;j<c;j++)  // condition de non intersection avec d'autres cellules
+		{
+			if (sqrt(pow(a-C(j,0),2)+pow(b-C(j,1),2)) <= 2*r)
+			{
+				ok = 0;
+			}
+		}
+		if (ok == 1)
+		{
+			C(c,0) = a;
+			C(c,1) = b;
+			c+=1;
+		}
+	}
+}
+
+border cell1(t=0,2*pi){x = C(0,0) + r*cos(t); y = C(0,1) + r*sin(t);}
+border cell2(t=0,2*pi){x = C(1,0) + r*cos(t); y = C(1,1) + r*sin(t);}
+border cell3(t=0,2*pi){x = C(2,0) + r*cos(t); y = C(2,1) + r*sin(t);}
+border cell4(t=0,2*pi){x = C(3,0) + r*cos(t); y = C(3,1) + r*sin(t);}
+border cell5(t=0,2*pi){x = C(4,0) + r*cos(t); y = C(4,1) + r*sin(t);}
+border cell6(t=0,2*pi){x = C(5,0) + r*cos(t); y = C(5,1) + r*sin(t);}
+border cell7(t=0,2*pi){x = C(6,0) + r*cos(t); y = C(6,1) + r*sin(t);}
+border cell8(t=0,2*pi){x = C(7,0) + r*cos(t); y = C(7,1) + r*sin(t);}
+border cell9(t=0,2*pi){x = C(8,0) + r*cos(t); y = C(8,1) + r*sin(t);}
+border cell10(t=0,2*pi){x = C(9,0) + r*cos(t); y = C(9,1) + r*sin(t);}
+border cell11(t=0,2*pi){x = C(10,0) + r*cos(t); y = C(10,1) + r*sin(t);}
+border cell12(t=0,2*pi){x = C(11,0) + r*cos(t); y = C(11,1) + r*sin(t);}
+
+// création du maillage
+mesh Sh = buildmesh(inf(200) + amont(30) + sup(200) + aval(30) + cell1(-30) + cell2(-30) + cell3(-30) + cell4(-30) + cell5(-30) + cell6(-30) + cell7(-30) + cell8(-30) + cell9(-30) + cell10(-30) + cell11(-30) + cell12(-30));
+
+//affichage du maillage
+plot(Sh, wait=1);
+
+// formulation variationelle 
+// la fonction test considérée a trois composantes : une pour la projection selon x de l'équation de Navier-Stokes, idem sur y, et enfin une pour l'équation d'incompressibilité
+
+fespace Uh(Sh,P1b);  
+fespace Ph(Sh,P1);
+func f = -U*(y-e)*(y+e);  // profil de vitesse imposé en amont du vaisseau
+Uh fh=f;
+Uh u, v, uu, vv;  // solution et fonction test pour chaque coordonnée (u et v) de la vitesse
+Ph p, pp;  // solution et fonction test pour la pression
+
+// formulation variationelle du problème
+problem stokes([u,v,p],[uu,vv,pp]) = int2d(Sh)(dx(u)*dx(uu)+dy(u)*dy(uu) + dx(v)*dx(vv)+dy(v)*dy(vv) + dx(p)*uu+dy(p)*vv + pp*(dx(u)+dy(v)) - 0.0000000001*p*pp) + on(sup,inf,cell1,cell2,cell3,cell4,cell5,cell6,cell7,cell8,cell9,cell10,cell11,cell12,u=0,v=0) + on(aval,p=0) + on(amont,u=fh,v=0);
+
+// le terme '- 0.0000000001*p*pp' sert à imposer l'origine des pressions 
+
+// résolution et affichage
+stokes;
+plot(u,wait=1);
+plot(v,wait=1);
+plot([u,v],wait=1);
