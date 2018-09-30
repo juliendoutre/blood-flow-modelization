@@ -8,4 +8,17 @@ Blood is composed of 45% of cells floating in a liquid called plasma. In order t
 
 The project's model and results are detailed in the following documents:
 * [Documentation](doc/french_doc.pdf) (French)
-* Coming soon
+* Coming soon (English)
+
+## Run
+
+This project uses the Freefem++ framework: [http://www.freefem.org/](http://www.freefem.org/)
+
+You can install it by following the instructions in the *Installation* section in the FreeFem++ documentation: [http://www.freefem.org/ff++/ftp/freefem++doc.pdf](http://www.freefem.org/ff++/ftp/freefem++doc.pdf)
+
+Then you can run any `.edp` file with:
+```
+FreeFem++ src/<filename>.edp
+```
+
+`simple.edp` will run only one simulations when `final.edp` will run 100 simulations.
