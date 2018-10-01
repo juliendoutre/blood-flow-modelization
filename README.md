@@ -10,7 +10,7 @@ The project's model and results are detailed in the following documents:
 * [Documentation](doc/french_doc.pdf) (French)
 * Coming soon (English)
 
-## Run
+## Run
 
 This project uses the Freefem++ framework: [http://www.freefem.org/](http://www.freefem.org/)
 

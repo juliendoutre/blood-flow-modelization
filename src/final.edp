@@ -1,42 +1,46 @@
 /* calcul du champ de vitesse dans un vaisseau sanguin */
+/* speed field computation in a blood vessel */
 
 // définition des constantes et paramètres 
-real L = 10; // longueur du vaisseau
-real e = 1; // demi-épaisseur du vaisseau
-real U = 1; // vitesse en amont de l'écoulement sanguin 
-real r = 0.35; // rayon d'une cellule (conservation de l'échelle)
-int N = 12; // nombre de cellules dans le vaisseau 
-int M = 100; // nombre de simulations à effectuer
+// constants and parameters definitions
+real L = 10; // longueur du vaisseau // vessel length
+real e = 1; // demi-épaisseur du vaisseau // vessel half-thickness 
+real U = 1; // vitesse en amont de l'écoulement sanguin // speed at the vessel entrance
+real r = 0.35; // rayon d'une cellule (conservation de l'échelle) // cell radius
+int N = 12; // nombre de cellules dans le vaisseau // cells number
+int M = 100; // nombre de simulations à effectuer // number of simulations to run
 real a = 0;  
 real b = 0;
-real[int,int] A(M,30);  // matrice post-traitement u
-real [int,int] B(M,30); // matrice post-traitement v
-func f = -U*(y-e)*(y+e);  // profil de vitesse imposé en amont du vaisseau
+real[int,int] A(M,30);  // matrice post-traitement u // post-treatment matrix u
+real [int,int] B(M,30); // matrice post-traitement v // post-treatment matrix v
+func f = -U*(y-e)*(y+e);  // profil de vitesse imposé en amont du vaisseau // speed profile at the vessel entrance
 
 // définition des bords du vaisseau sanguin
-border inf(t=0,L){x=t;y=-e;}  // paroi inférieure du vaisseau
-border aval(t=-e,e){x=L;y=t;}  // aval du vaisseau
-border sup(t=L,0){x=t;y=e;} // paroi supérieure du vaisseau
-border amont(t=e,-e){x=0;y=t;}  // amont du vaisseau
+// vessels borders definitions
+border inf(t=0,L){x=t;y=-e;}  // paroi inférieure du vaisseau // lower vessel limit
+border aval(t=-e,e){x=L;y=t;}  // aval du vaisseau // vessel output
+border sup(t=L,0){x=t;y=e;} // paroi supérieure du vaisseau // upper vessel limit
+border amont(t=e,-e){x=0;y=t;}  // amont du vaisseau // vessel entrance
 
 for (int n=0;n<M;n++)
 {
 	// définition des cellules (obstacles)
-	int c(0); // variable de comptage
-	real[int, int] C(N,2); // matrice contenant les coordonnées des centres des obstacles
+	// cells definition
+	int c(0); // variable de comptage // counter
+	real[int, int] C(N,2); // matrice contenant les coordonnées des centres des obstacles // matrix with the cell's centers' coordinates
 	for (int i=0;i<N;i++)
 	{
 		C(i,1) = 0;
 		C(i,0) = 0;
 	}
-	while(c<N)  // on créé N cellules positionnées aléatoirement
+	while(c<N)  // on créé N cellules positionnées aléatoirement // creation of N cells randomly positionned
 	{
-		a = L*randreal1(); // abscisse aléatoire 
-		b = 2*e*randreal1() - e; // ordonnée aléatoire
-		if (a + r < L && a - r > 0 && b + r < e && b - r > -e) // condition de non débordement du vaisseau
+		a = L*randreal1(); // abscisse aléatoire // random abscissa
+		b = 2*e*randreal1() - e; // ordonnée aléatoire // random ordinate
+		if (a + r < L && a - r > 0 && b + r < e && b - r > -e) // condition de non débordement du vaisseau // non overlapping condition
 		{
 			bool ok(1);
-			for(int j=0;j<c;j++)  // condition de non intersection avec d'autres cellules
+			for(int j=0;j<c;j++)  // condition de non intersection avec d'autres cellules // non intersection with other cells condition
 			{
 				if (sqrt(pow(a-C(j,0),2)+pow(b-C(j,1),2)) <= 2*r)
 				{
@@ -66,30 +70,37 @@ for (int n=0;n<M;n++)
 	border cell12(t=0,2*pi){x = C(11,0) + r*cos(t); y = C(11,1) + r*sin(t);}
 
 	// création du maillage
+	// mesh generation
 	mesh Sh = buildmesh(inf(200) + amont(30) + sup(200) + aval(30) + cell1(-30) + cell2(-30) + cell3(-30) + cell4(-30) + cell5(-30) + cell6(-30) + cell7(-30) + cell8(-30) + cell9(-30) + cell10(-30) + cell11(-30) + cell12(-30));
 
-	//affichage du maillage
+	// affichage du maillage
+	// mesh display
 	plot(Sh);
 
 	// formulation variationelle
+	// weak formulation
 	fespace Uh(Sh,P1b);  
 	fespace Ph(Sh,P1);
 	Uh fh=f;
-	Uh u, v, uu, vv;  // solution et fonction test pour chaque coordonnée (u et v) de la vitesse
-	Ph p, pp;  // solution et fonction test pour la pression
+	Uh u, v, uu, vv;  // solution et fonction test pour chaque coordonnée (u et v) de la vitesse // solutions and test functions for the speed
+	Ph p, pp;  // solution et fonction test pour la pression // solutions and test function for the pressure
 
 	// formulation variationelle du problème
+	// weak formulation
 	problem stokes([u,v,p],[uu,vv,pp]) = int2d(Sh)(dx(u)*dx(uu)+dy(u)*dy(uu) + dx(v)*dx(vv)+dy(v)*dy(vv) + dx(p)*uu + dy(p)*vv + pp*(dx(u)+dy(v)) - 0.0000000001*p*pp) + on(sup,inf,cell1,cell2,cell3,cell4,cell5,cell6,cell7,cell8,cell9,cell10,cell11,cell12,u=0,v=0) + on(aval,p=0) + on(amont,u=fh,v=0);
 
 	// le terme '- 0.0000000001*p*pp' sert à imposer l'origine des pressions 
+	// the '- 0.0000000001*p*pp' therm is used to force the pressure origin
 
 	// résolution et affichage
+	// computation and display
 	stokes;
 	plot(u); 
 	plot(v);
 	plot([u,v]);
 
 	// préparation du post traitement 
+	// post-treatment preparation
 	for(int k=0;k<30;k++)
 	{
 		A(n,k) = u(L,-1+k*2*e/30);
@@ -98,8 +109,9 @@ for (int n=0;n<M;n++)
 }
 
 // post traitement : influence (en moyenne) des obstacles sur le profil de vitesse 
-real [int] D(30); // vecteur contenant le profil aval moyen u 
-real [int] E(30); // vecteur contenant le profil aval moyen v 
+// post-treatment : average influence of the cells on the speed profile
+real [int] D(30); // vecteur contenant le profil aval moyen u // vector for the exit speed profile u
+real [int] E(30); // vecteur contenant le profil aval moyen v // vector for the exit speed profile v
 for (int i=0;i<30;i++)
 {
 	real S=0;
@@ -113,7 +125,7 @@ for (int i=0;i<30;i++)
 	E(i) = T/M;
 }
 
-real [int] F(30);  // vecteur contenant le rapport aval/amont
+real [int] F(30);  // vecteur contenant le rapport aval/amont // vector containing the ratio between the entrance and exit speed
 
 
 F(0) = 0;
