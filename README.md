@@ -21,4 +21,4 @@ Then you can run any `.edp` file with:
 FreeFem++ src/<filename>.edp
 ```
 
-`simple.edp` will run only one simulations when `final.edp` will run 100 simulations.
+`simple.edp` will run only one simulation when `final.edp` will run 100 simulations.
