@@ -1,4 +1,4 @@
-# Blood vessel flow modelization
+# Blood vessel flow modelization 🩸
 
 ## Problem 
 
